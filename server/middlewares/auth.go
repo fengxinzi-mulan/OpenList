@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"crypto/subtle"
+	"slices"
 
 	"github.com/OpenListTeam/OpenList/v4/internal/conf"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
@@ -16,6 +17,14 @@ import (
 // if token is empty, set user to guest
 func Auth(allowDisabledGuest bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		// 允许放行的路径
+		allowPaths := []string{
+			"/api/fs/list",
+		}
+		if slices.Contains(allowPaths, c.Request.URL.Path) {
+			c.Next()
+			return
+		}
 		token := c.GetHeader("Authorization")
 		if subtle.ConstantTimeCompare([]byte(token), []byte(setting.GetStr(conf.Token))) == 1 {
 			admin, err := op.GetAdmin()
